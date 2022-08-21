@@ -12,10 +12,6 @@ const upload = multer({ storage });
 const s3 = new AWS.S3();
 
 async function theSharp(req, res, next) {
-  /* */
-
-  // console.log(req.file);
-
   req.imgResizeBig = [];
   req.imgResizeMini = [];
 
@@ -25,7 +21,7 @@ async function theSharp(req, res, next) {
       .toBuffer();
 
     req.imgResizeBig.push({
-      originalname: req.files[i].originalname,
+      originalname: "big" + req.files[i].originalname,
       mimetype: req.files[i].mimetype,
       buffer: resizeWidthBig,
     });
@@ -34,7 +30,7 @@ async function theSharp(req, res, next) {
       .resize(250)
       .toBuffer();
     req.imgResizeMini.push({
-      originalname: req.files[i].originalname,
+      originalname: "mini" + req.files[i].originalname,
       mimetype: req.files[i].mimetype,
       buffer: resizeWidthMini,
     });
@@ -44,8 +40,6 @@ async function theSharp(req, res, next) {
 }
 
 const enviarAws = (req, res, next) => {
-  // console.log(req.file.mimetype);
-  /* */
   for (let i = 0; i < req.imgResizeBig.length; i++) {
     s3.upload(
       {
@@ -53,7 +47,7 @@ const enviarAws = (req, res, next) => {
         Bucket: process.env.AWS_BUCKET,
         ACL: "public-read",
         ContentType: req.imgResizeBig[i].mimetype,
-        Key: `${req.params.usuarioID}/big` + req.imgResizeBig[i].originalname,
+        Key: `${req.params.usuarioID}/` + req.imgResizeBig[i].originalname,
       },
       (err, data) => {
         req.dadosDB = data;
@@ -69,7 +63,7 @@ const enviarAws = (req, res, next) => {
         Bucket: process.env.AWS_BUCKET,
         ACL: "public-read",
         ContentType: req.imgResizeMini[i].mimetype,
-        Key: `${req.params.usuarioID}/mini` + req.imgResizeMini[i].originalname,
+        Key: `${req.params.usuarioID}/` + req.imgResizeMini[i].originalname,
       },
       (err, data) => {
         req.dadosDB = data;
@@ -80,7 +74,6 @@ const enviarAws = (req, res, next) => {
     );
   }
 
-  //  console.log(req.imgResize80);
   next();
 };
 
@@ -90,8 +83,7 @@ app.post(
   theSharp,
   enviarAws,
   (req, res) => {
-    // console.log(req.dadosDB);
-    res.send("Hello World!");
+    res.send("ok");
   }
 );
 
